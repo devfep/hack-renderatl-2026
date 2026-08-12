@@ -56,6 +56,16 @@ services:
         value: "FALSE"
         scope: RUN_TIME
         type: GENERAL
+      # Without these the runtime falls back to http://localhost:4201, which does not exist
+      # in the container, and every threads request 500s.
+      - key: INTELLIGENCE_API_URL
+        value: https://api.intelligence.copilotkit.ai
+        scope: RUN_TIME
+        type: GENERAL
+      - key: INTELLIGENCE_GATEWAY_WS_URL
+        value: wss://realtime.intelligence.copilotkit.ai
+        scope: RUN_TIME
+        type: GENERAL
       - key: COPILOTKIT_TELEMETRY_DISABLED
         value: "true"
         scope: RUN_AND_BUILD_TIME
