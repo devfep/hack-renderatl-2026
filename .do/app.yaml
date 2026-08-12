@@ -1,73 +1,65 @@
-# DigitalOcean App Platform spec for the ADK web agent.
-#
-# Secrets are placeholders. Render them from the environment before deploying; never commit
-# real values:
-#
-#   set -a && . ./.env && set +a
-#   envsubst < .do/app.yaml | doctl apps create --spec - --wait
-#
-# App Platform encrypts every `type: SECRET` value on ingest, so the spec you read back with
-# `doctl apps spec get <app-id>` carries EV[1:...] ciphertext rather than plaintext.
-
 name: atl-transit
-region: atl
-
-alerts:
-  - rule: DEPLOYMENT_FAILED
-  - rule: DOMAIN_FAILED
-
-ingress:
-  rules:
-    - component:
-        name: web
-      match:
-        path:
-          prefix: /
+region: nyc
 
 services:
   - name: web
+    dockerfile_path: Dockerfile
+    source_dir: /
     github:
       repo: devfep/hack-renderatl-2026
       branch: main
       deploy_on_push: true
-    source_dir: /
-    dockerfile_path: Dockerfile
-
-    # The image's CMD binds 0.0.0.0 on $PORT, which App Platform sets from http_port.
     http_port: 8080
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-1gb
-
     health_check:
-      http_path: /health
+      http_path: /list-apps
       initial_delay_seconds: 30
-      period_seconds: 10
-      timeout_seconds: 5
-      success_threshold: 1
+      period_seconds: 20
       failure_threshold: 5
-
     envs:
+      # The agent reads Snowflake in the deployed app; DuckDB is for local work only.
       - key: ATL_STORE
+        scope: RUN_TIME
         value: snowflake
+      # Development burns the free-tier daily quota on flash-lite, so the deployed
+      # app runs on a model whose 20-request allowance is untouched.
+      - key: GEMINI_MODEL
         scope: RUN_TIME
-        type: GENERAL
+        value: gemini-3.6-flash
       - key: GOOGLE_GENAI_USE_VERTEXAI
+        scope: RUN_TIME
         value: "FALSE"
+      - key: SF_WAREHOUSE
         scope: RUN_TIME
-        type: GENERAL
+        value: COMPUTE_WH
+      - key: SF_DATABASE
+        scope: RUN_TIME
+        value: ATL
+      - key: SF_SCHEMA
+        scope: RUN_TIME
+        value: PUBLIC
+      - key: SF_ROLE
+        scope: RUN_TIME
+        value: ACCOUNTADMIN
+      - key: SF_CORTEX_MODEL
+        scope: RUN_TIME
+        value: claude-sonnet-4-5
+      # Set with: doctl apps update <id> --spec .do/app.yaml after filling these in,
+      # or in the dashboard. Never commit real values.
       - key: GOOGLE_API_KEY
-        value: ${GOOGLE_API_KEY}
         scope: RUN_TIME
         type: SECRET
+        value: REPLACE_ME
       - key: SF_ACCOUNT
-        value: ${SF_ACCOUNT}
         scope: RUN_TIME
         type: SECRET
+        value: REPLACE_ME
       - key: SF_USER
-        value: ${SF_USER}
         scope: RUN_TIME
         type: SECRET
+        value: REPLACE_ME
       - key: SF_PAT
-        value: ${SF_PAT}
         scope: RUN_TIME
         type: SECRET
+        value: REPLACE_ME
