@@ -66,6 +66,12 @@ services:
         value: wss://realtime.intelligence.copilotkit.ai
         scope: RUN_TIME
         type: GENERAL
+      # Traces go to the deployed Phoenix. register() costs about 7s once at startup;
+      # individual spans emit in well under a second.
+      - key: PHOENIX_ENDPOINT
+        value: https://atl-transit-phoenix-mi8iu.ondigitalocean.app/v1/traces
+        scope: RUN_TIME
+        type: GENERAL
       - key: COPILOTKIT_TELEMETRY_DISABLED
         value: "true"
         scope: RUN_AND_BUILD_TIME

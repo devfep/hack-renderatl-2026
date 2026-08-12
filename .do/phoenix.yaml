@@ -1,0 +1,57 @@
+# Arize Phoenix, deployed from the official image as its own app.
+#
+#   doctl apps create --spec .do/phoenix.yaml
+#
+# Two things to know before pointing anyone at this:
+#
+#   No authentication. Anyone with the URL sees every question asked of the agent, the SQL
+#   Cortex generated, and the rows returned. That is acceptable here only because the
+#   underlying data is public transit information.
+#
+#   No persistence. App Platform gives the container no durable disk, so traces are held in
+#   memory and every restart or redeploy empties the project. This is a live window onto
+#   recent activity, not a trace archive.
+name: atl-transit-phoenix
+region: atl
+
+alerts:
+  - rule: DEPLOYMENT_FAILED
+
+ingress:
+  rules:
+    - component:
+        name: phoenix
+      match:
+        path:
+          prefix: /
+
+services:
+  - name: phoenix
+    image:
+      registry_type: DOCKER_HUB
+      registry: arizephoenix
+      repository: phoenix
+      tag: "20.1.0"
+
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-1gb
+
+    health_check:
+      http_path: /healthz
+      initial_delay_seconds: 45
+      period_seconds: 15
+      timeout_seconds: 10
+      failure_threshold: 6
+
+    envs:
+      # Phoenix reads PHOENIX_PORT, not PORT, and serves both its UI and the OTLP HTTP
+      # collector (/v1/traces) on the same port.
+      - key: PHOENIX_PORT
+        value: "8080"
+        scope: RUN_TIME
+        type: GENERAL
+      - key: PHOENIX_WORKING_DIR
+        value: /tmp/phoenix
+        scope: RUN_TIME
+        type: GENERAL

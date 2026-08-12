@@ -11,7 +11,7 @@ const runtime = new CopilotRuntime({
   agents: {
     default: createDefaultAgent(),
   },
-  // A2UI: the agent declares what to render and the client draws it with our own
+  // A2UI: the agent declares what to render and the client draws it with the app's own
   // components, so answers arrive as cards and tables rather than walls of text.
   a2ui: {},
   // --- copilotkit:intelligence (remove this block to opt out) ---

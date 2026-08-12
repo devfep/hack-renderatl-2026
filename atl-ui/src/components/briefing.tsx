@@ -42,7 +42,7 @@ export function Briefing() {
         Atlanta Transit Agent
       </h1>
       <p className="mt-3 text-lg" style={{ color: INK_SECONDARY }}>
-        We set out to prove MARTA underserves Atlanta&rsquo;s poorest neighbourhoods. The data
+        I set out to prove MARTA underserves Atlanta&rsquo;s poorest neighbourhoods. The data
         refused.
       </p>
 
