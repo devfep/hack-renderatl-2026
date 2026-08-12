@@ -26,7 +26,9 @@ STOP_FREQUENCY(STOP_ID, SERVICE_DAY, TRIP_COUNT)
 ROUTES(ROUTE_ID, ROUTE_SHORT_NAME, ROUTE_LONG_NAME, ROUTE_TYPE)
   -- ROUTE_TYPE: 0=streetcar, 1=heavy rail, 3=bus.
 COC_AREA(COC_NAME, NEIGHBORHOODS, COC_TIER, PCT_NO_VEHICLE, PCT_POVERTY,
-         PCT_TRANSIT_COMMUTE, STOP_COUNT, MEDIAN_WEEKDAY_TRIPS)
+         PCT_TRANSIT_COMMUTE, STOP_COUNT, MEDIAN_WEEKDAY_TRIPS, BRIEF)
+  -- BRIEF is a one-sentence plain-English summary of the area, written during the harvest.
+  -- Select it whenever the question is about a specific neighbourhood, and quote it verbatim.
   -- one row per Community of Concern. COC_NAME is an internal code like 'NSA H01' - NEVER show
   -- it to a user. ALWAYS select NEIGHBORHOODS instead, which holds the real place names
   -- ('Vine City', 'Mechanicsville'). MEDIAN_WEEKDAY_TRIPS is ALREADY a
