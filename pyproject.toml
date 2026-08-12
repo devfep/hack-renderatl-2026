@@ -53,6 +53,8 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101", "PLR2004", "D103", "INP001"]
+# The AG-UI bridge is its own uv project's entry point, not a module of this package.
+"atl-ui/agent/main.py" = ["INP001"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
