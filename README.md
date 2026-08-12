@@ -50,19 +50,44 @@ their own questions instead of taking mine on faith.
 
 ## Architecture
 
-```
-Render Workflow (scheduled)          DigitalOcean App Platform
-┌──────────────────────────┐         ┌───────────────────────────┐
-│ fetch MARTA GTFS         │         │  ADK agent (Gemini)       │
-│ + Communities of Concern │         │    orchestration          │
-│ + NPU boundaries         │         │         │                 │
-│ aggregate 2.4M rows      │         │         ▼                 │
-│ spatial join             │         │  Snowflake Cortex REST    │
-│ fan out 15 Gemma briefs  │──────▶  │    NL→SQL + summarise     │
-│ validate + load          │ Snowflake         │                 │
-└──────────────────────────┘         │         ▼                 │
-                                     │  MARTA GTFS-realtime      │
-                                     └───────────────────────────┘
+```mermaid
+flowchart LR
+  subgraph sources["Public data"]
+    gtfs["MARTA GTFS<br/>2.4M stop times"]
+    coc["Communities of Concern 2025<br/>City of Atlanta"]
+    npu["NPU boundaries<br/>City of Atlanta"]
+    rt["MARTA GTFS-realtime<br/>live positions"]
+  end
+
+  subgraph render["Render Workflow — scheduled"]
+    fetch["fetch"] --> agg["aggregate<br/>2.4M rows to 49k"]
+    agg --> join["spatial join<br/>stops to NPU and CoC"]
+    join --> briefs["15 Gemma 4 briefs<br/>fanned out in parallel"]
+    briefs --> validate["validate"]
+  end
+
+  snow[("Snowflake<br/>STOPS · STOP_FREQUENCY<br/>ROUTES · COC_AREA")]
+
+  subgraph docean["DigitalOcean App Platform"]
+    ui["CopilotKit + A2UI<br/>agent-driven panel"]
+    adk["ADK agent — Gemini<br/>orchestration and tool choice"]
+    cortex["Snowflake Cortex REST<br/>question to SQL, rows to prose"]
+  end
+
+  gtfs --> fetch
+  coc --> fetch
+  npu --> fetch
+  validate --> snow
+  ui <--> adk
+  adk --> cortex
+  cortex --> snow
+  snow --> cortex
+  rt --> adk
+
+  classDef store fill:#0d366b,stroke:#3987e5,color:#ffffff
+  classDef live fill:#1a1a19,stroke:#898781,color:#c3c2b7
+  class snow store
+  class rt live
 ```
 
 **Three models, three distinct jobs, no overlap:**
