@@ -5,6 +5,8 @@ including when the answer is "this is fine."
 
 Built for [Hack RenderATL 2026](https://hack-renderatl.devpost.com/).
 
+**Live: https://atl-transit-wra5i.ondigitalocean.app/dev-ui/**
+
 ```
 "Which Atlanta Communities of Concern get the least weekday bus service?"
 
@@ -117,6 +119,25 @@ the agent.
 ADK cannot serialise into its event stream. Every numeric answer would have failed against the
 deployed Store while passing locally on DuckDB — that is, it would have broken on stage.
 
+## Observability
+
+Answering one question fans out into several model calls and a Snowflake round trip. Every run
+is traced into a locally-hosted [Arize Phoenix](https://phoenix.arize.com/) — no account, no
+API key:
+
+```bash
+uv run phoenix serve                    # localhost:6006
+uv run python -m atl_transit.demo       # ask a question with tracing on
+```
+
+```
+invocation [atl_transit]      CHAIN
+  agent_run [atl_transit]     AGENT
+    call_llm                  LLM      ← Gemini decides which tool
+      execute_tool ask_transit  TOOL   ← Cortex writes SQL, Snowflake answers
+    call_llm                  LLM      ← Gemini presents the result
+```
+
 ## Running it
 
 ```bash
@@ -134,8 +155,17 @@ The Store defaults to DuckDB so the whole project runs locally with no accounts 
 ## Deploying
 
 ```bash
-doctl apps create --spec .do/app.yaml     # web app
+set -a && . ./.env && set +a
+envsubst < .do/app.yaml | doctl apps create --spec -
 ```
+
+Secrets are `${VAR}` placeholders rendered from `.env` at deploy time, so nothing sensitive is
+committed. The pipe through `envsubst` is required — passing the file directly makes
+DigitalOcean try to resolve `${GOOGLE_API_KEY}` as a bindable variable and reject it.
+
+The image builds with plain Docker syntax on purpose. `RUN --mount` cache and bind mounts
+require BuildKit, which App Platform's builder does not enable, so a BuildKit-dependent
+Dockerfile succeeds locally and fails there.
 
 The Render Workflow is defined in [`src/atl_transit/workflow.py`](src/atl_transit/workflow.py).
 Render Blueprints do not yet support Workflows, so the service is created in the dashboard
