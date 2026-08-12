@@ -163,6 +163,13 @@ checking its own word count until it exhausted the token budget and never answer
 the word limit fixed it; the brief extractor still has to find the answer among the
 commentary.
 
+**A model treats "don't invent numbers" and "don't extrapolate" as different rules.** Twice
+the agent stated figures it was never given: route 15 named from memory rather than the
+schedule, and — after a query returning the ten lowest-service areas — a claim that the highest
+see "100 to 200+" trips when the true maximum is 80. Both were caught by reading output
+carefully, not by tests. The instruction now says a result contains only the rows the query
+selected, and a rubric fails the agent for describing anything outside them.
+
 **A stream failure looked like a timeout and was an auth problem.** Answering takes ~30s
 across five network hops, and the UI reported `RUN_ERROR: terminated`. The obvious read was
 that something upstream cut a long stream; the actual cause was an incomplete CopilotKit

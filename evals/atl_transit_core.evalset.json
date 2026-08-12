@@ -66,6 +66,13 @@
             "text_property": "The agent called the ask_transit tool to obtain figures rather than answering from its own knowledge. The exact wording of the question argument does not matter, only that the data was actually queried."
           },
           "type": "TOOL_USE_QUALITY"
+        },
+        {
+          "rubric_id": "no_extrapolation_beyond_rows",
+          "rubric_content": {
+            "text_property": "The response describes only the rows the tool actually returned. It does not state, estimate or imply a maximum, minimum, range or typical value for rows outside the result set. Observed failure: after a query returning the ten lowest-service areas, the agent claimed the highest see '100 to 200+' trips when the true maximum is 80."
+          },
+          "type": "FINAL_RESPONSE_QUALITY"
         }
       ],
       "final_session_state": {}
@@ -133,6 +140,13 @@
             "text_property": "The agent called the ask_transit tool to obtain figures rather than answering from its own knowledge. The exact wording of the question argument does not matter, only that the data was actually queried."
           },
           "type": "TOOL_USE_QUALITY"
+        },
+        {
+          "rubric_id": "no_extrapolation_beyond_rows",
+          "rubric_content": {
+            "text_property": "The response describes only the rows the tool actually returned. It does not state, estimate or imply a maximum, minimum, range or typical value for rows outside the result set. Observed failure: after a query returning the ten lowest-service areas, the agent claimed the highest see '100 to 200+' trips when the true maximum is 80."
+          },
+          "type": "FINAL_RESPONSE_QUALITY"
         }
       ],
       "final_session_state": {}
@@ -232,6 +246,13 @@
             "text_property": "The agent called the ask_transit tool to obtain figures rather than answering from its own knowledge. The exact wording of the question argument does not matter, only that the data was actually queried."
           },
           "type": "TOOL_USE_QUALITY"
+        },
+        {
+          "rubric_id": "no_extrapolation_beyond_rows",
+          "rubric_content": {
+            "text_property": "The response describes only the rows the tool actually returned. It does not state, estimate or imply a maximum, minimum, range or typical value for rows outside the result set. Observed failure: after a query returning the ten lowest-service areas, the agent claimed the highest see '100 to 200+' trips when the true maximum is 80."
+          },
+          "type": "FINAL_RESPONSE_QUALITY"
         }
       ],
       "final_session_state": {}
