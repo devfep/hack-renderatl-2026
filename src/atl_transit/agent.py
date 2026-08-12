@@ -7,6 +7,7 @@ Cortex REST call against harvested data.
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from google.adk.agents import Agent
@@ -112,7 +113,8 @@ def live_vehicles() -> dict[str, Any]:
 
 root_agent = Agent(
     name="atl_transit",
-    model="gemini-2.5-flash",
+    # gemini-2.5-* is retired for new API keys; 3.5-flash is the current equivalent.
+    model=os.environ.get("GEMINI_MODEL", "gemini-3.5-flash"),
     description="Answers questions about MARTA service and Atlanta transit equity.",
     instruction=INSTRUCTION,
     tools=[ask_transit, run_sql, live_vehicles],
