@@ -120,17 +120,40 @@ def run_sql(sql: str) -> dict[str, Any]:
     }
 
 
+def _route_names() -> dict[str, str]:
+    """Map each route's public number to its full name, from the harvested schedule."""
+    try:
+        _columns, rows = open_store().query("SELECT ROUTE_SHORT_NAME, ROUTE_LONG_NAME FROM ROUTES")
+    except Exception:  # noqa: BLE001 - names are a nicety; positions still work without them
+        return {}
+    return {str(short): str(long) for short, long in rows if short}
+
+
 def live_vehicles() -> dict[str, Any]:
     """Report where MARTA vehicles are right now, from the live GTFS-realtime feed.
 
+    Route names are attached from the harvested schedule rather than left to the model. The
+    realtime feed carries only route numbers, and asked to name them a model will supply
+    plausible, subtly wrong ones from memory.
+
     Returns:
-        The number of vehicles currently reporting and a sample of their positions.
+        The number of vehicles currently reporting, and a sample of their positions with the
+        route each is running.
     """
     try:
         vehicles = vehicle_positions()
     except Exception as exc:  # noqa: BLE001 - the live feed is best-effort
         return {"error": f"Live feed unavailable: {exc}"}
-    return {"vehicle_count": len(vehicles), "vehicles": vehicles[:MAX_ROWS]}
+    names = _route_names()
+    sample = [{**v, "route_name": names.get(str(v["route_id"]), "")} for v in vehicles[:MAX_ROWS]]
+    return {
+        "vehicle_count": len(vehicles),
+        "vehicles": sample,
+        "note": (
+            "route_name comes from the schedule. Never name a route that has no route_name "
+            "here - say the route number instead."
+        ),
+    }
 
 
 root_agent = Agent(
