@@ -39,6 +39,12 @@ USER app
 # and making each scheduled harvest depend on DuckDB's extension CDN staying up.
 RUN python -c "import duckdb; duckdb.connect().execute('INSTALL spatial; LOAD spatial;')"
 
+# Decline ADK's usage telemetry at build time. The server injects the stored consent into the
+# Web UI's bootstrap config, and an absent choice makes every first-time visitor answer a
+# Google data-collection dialog before they can use the app. Declining on their behalf is the
+# right default: nobody visiting a public demo should be opted into anything.
+RUN adk telemetry disable
+
 EXPOSE 8080
 
 # DigitalOcean and Render both inject PORT; bind 0.0.0.0 or the platform sees no listener.
