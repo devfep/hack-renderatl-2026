@@ -49,10 +49,12 @@ EXPOSE 8080
 # Agent on a fixed internal port, Next on the platform's PORT. If either dies the container
 # exits, so the platform restarts the pair rather than serving a UI with no agent behind it.
 # bash, not sh: this image's /bin/sh is dash, which has no `wait -n`.
+# No pipes: piping through sed buffers stdout, so a crash inside either process leaves the
+# container silent and undebuggable.
 CMD ["bash", "-c", "\
-  (cd /app/atl-ui/agent && PORT=8000 uv run --no-sync python main.py 2>&1 | sed 's/^/[agent] /') & \
+  (cd /app/atl-ui/agent && PORT=8000 exec uv run --no-sync python main.py) & \
   AGENT=$!; \
-  (cd /app/atl-ui && npx next start --port ${PORT} --hostname 0.0.0.0 2>&1 | sed 's/^/[ui] /') & \
+  (cd /app/atl-ui && exec npx next start --port ${PORT} --hostname 0.0.0.0) & \
   UI=$!; \
   wait -n $AGENT $UI; \
   kill $AGENT $UI 2>/dev/null; \
