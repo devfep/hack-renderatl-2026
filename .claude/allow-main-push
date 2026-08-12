@@ -1,0 +1,1 @@
+Opt out of the global no-push-to-main hook. Guarded by .git/hooks/pre-push instead.

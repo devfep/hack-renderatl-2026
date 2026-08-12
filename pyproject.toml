@@ -1,0 +1,57 @@
+[project]
+name = "atl-transit"
+version = "0.1.0"
+description = "Conversational agent answering questions about Atlanta transit service and equity"
+readme = "README.md"
+authors = [{ name = "Felix P.", email = "devfep@gmail.com" }]
+requires-python = ">=3.13"
+dependencies = [
+    "duckdb==1.5.5",
+    "google-adk==2.6.3",
+    "pandas==3.0.5",
+    "python-dotenv==1.2.2",
+    "requests==2.34.2",
+    "snowflake-connector-python==4.7.2",
+]
+
+[project.scripts]
+atl-harvest = "atl_transit.harvest:main"
+
+[build-system]
+requires = ["uv_build>=0.12.3,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = ["pytest==9.1.1", "pytest-cov==7.1.0", "ruff==0.16.2", "ty==0.0.70"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "COM812",  # conflicts with the formatter
+    "ISC001",  # conflicts with the formatter
+    "CPY001",  # single-author hackathon repo; no per-file copyright headers
+    "D203",    # incompatible with D211
+    "D213",    # incompatible with D212
+    "S608",    # SQL is built from a fixed schema, not user strings
+    "T201",    # harvest is a CLI; print is the interface
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "PLR2004", "D103", "INP001"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ty.environment]
+python-version = "3.13"
+
+[tool.ty.terminal]
+error-on-warning = true
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
