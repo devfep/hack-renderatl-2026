@@ -23,10 +23,12 @@ ingress:
 
 services:
   - name: web
-    github:
-      repo: devfep/hack-renderatl-2026
+    # `git:` clones a public repo with no OAuth. The `github:` source would add
+    # deploy_on_push, but requires authorising DigitalOcean's GitHub app first and fails
+    # with "GitHub user not authenticated" until you do.
+    git:
+      repo_clone_url: https://github.com/devfep/hack-renderatl-2026.git
       branch: main
-      deploy_on_push: true
     source_dir: /
     dockerfile_path: Dockerfile
 
