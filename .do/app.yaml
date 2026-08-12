@@ -1,0 +1,73 @@
+# DigitalOcean App Platform spec for the ADK web agent.
+#
+# Secrets are placeholders. Render them from the environment before deploying; never commit
+# real values:
+#
+#   set -a && . ./.env && set +a
+#   envsubst < .do/app.yaml | doctl apps create --spec - --wait
+#
+# App Platform encrypts every `type: SECRET` value on ingest, so the spec you read back with
+# `doctl apps spec get <app-id>` carries EV[1:...] ciphertext rather than plaintext.
+
+name: atl-transit
+region: atl
+
+alerts:
+  - rule: DEPLOYMENT_FAILED
+  - rule: DOMAIN_FAILED
+
+ingress:
+  rules:
+    - component:
+        name: web
+      match:
+        path:
+          prefix: /
+
+services:
+  - name: web
+    github:
+      repo: devfep/hack-renderatl-2026
+      branch: main
+      deploy_on_push: true
+    source_dir: /
+    dockerfile_path: Dockerfile
+
+    # The image's CMD binds 0.0.0.0 on $PORT, which App Platform sets from http_port.
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-1gb
+
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 30
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 5
+
+    envs:
+      - key: ATL_STORE
+        value: snowflake
+        scope: RUN_TIME
+        type: GENERAL
+      - key: GOOGLE_GENAI_USE_VERTEXAI
+        value: "FALSE"
+        scope: RUN_TIME
+        type: GENERAL
+      - key: GOOGLE_API_KEY
+        value: ${GOOGLE_API_KEY}
+        scope: RUN_TIME
+        type: SECRET
+      - key: SF_ACCOUNT
+        value: ${SF_ACCOUNT}
+        scope: RUN_TIME
+        type: SECRET
+      - key: SF_USER
+        value: ${SF_USER}
+        scope: RUN_TIME
+        type: SECRET
+      - key: SF_PAT
+        value: ${SF_PAT}
+        scope: RUN_TIME
+        type: SECRET

@@ -1,0 +1,36 @@
+# Render Blueprint: the nightly harvest that reloads Snowflake from MARTA GTFS and
+# Atlanta's Communities of Concern boundaries.
+#
+# Reuses the same Dockerfile as the App Platform web service, so the harvest runs against
+# byte-identical dependencies. `dockerCommand` swaps the image's default web-server CMD for
+# the harvest console script.
+#
+# Secrets are marked `sync: false`: Render prompts for each one when the Blueprint is first
+# applied, and they are never stored in this file.
+
+services:
+  - type: cron
+    name: atl-harvest
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: atl-harvest
+    plan: starter
+    region: virginia
+
+    # 07:00 UTC daily — 03:00 America/New_York. Render evaluates schedules in UTC only.
+    schedule: "0 7 * * *"
+
+    envVars:
+      - key: ATL_STORE
+        value: snowflake
+      - key: GOOGLE_GENAI_USE_VERTEXAI
+        value: "FALSE"
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: SF_ACCOUNT
+        sync: false
+      - key: SF_USER
+        sync: false
+      - key: SF_PAT
+        sync: false

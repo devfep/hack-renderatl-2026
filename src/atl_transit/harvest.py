@@ -14,6 +14,7 @@ from typing import Any
 import duckdb
 import requests
 
+from atl_transit.gemma import write_briefs
 from atl_transit.store import open_store
 
 GTFS_URL = "https://itsmarta.com/google_transit_feed/google_transit.zip"
@@ -150,6 +151,7 @@ def build_tables(workdir: Path) -> dict[str, Any]:
     }
     for frame in frames.values():
         frame.columns = [c.upper() for c in frame.columns]
+    frames["COC_AREA"] = write_briefs(frames["COC_AREA"])
     return frames
 
 

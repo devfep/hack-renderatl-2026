@@ -56,3 +56,8 @@ error-on-warning = true
 [tool.pytest.ini_options]
 addopts = "-q"
 testpaths = ["tests"]
+filterwarnings = [
+    "error",
+    # Raised inside google-adk 2.6.3 itself; nothing in this repo subclasses BaseAgentConfig.
+    "ignore:BaseAgentConfig is deprecated:DeprecationWarning",
+]
