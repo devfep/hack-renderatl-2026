@@ -1,65 +1,97 @@
+# Deploy with:
+#   set -a && . ./.env && set +a
+#   envsubst < .do/app.yaml | doctl apps create --spec - --wait
+#
+# Secrets are ${VAR} placeholders rendered from .env at deploy time, so nothing sensitive is
+# committed. Piping through envsubst is required - passing this file directly makes
+# DigitalOcean try to resolve ${GOOGLE_API_KEY} as a bindable variable and reject it.
 name: atl-transit
-region: nyc
+region: atl
+
+alerts:
+  - rule: DEPLOYMENT_FAILED
+  - rule: DOMAIN_FAILED
+
+# Service-level `routes:` is deprecated; top-level ingress is the current schema.
+ingress:
+  rules:
+    - component:
+        name: web
+      match:
+        path:
+          prefix: /
 
 services:
   - name: web
-    dockerfile_path: Dockerfile
-    source_dir: /
     github:
       repo: devfep/hack-renderatl-2026
       branch: main
       deploy_on_push: true
+    source_dir: /
+    dockerfile_path: Dockerfile
+
     http_port: 8080
     instance_count: 1
+    # 512MB OOMs with ADK plus pandas, snowflake-connector and duckdb loaded.
     instance_size_slug: apps-s-1vcpu-1gb
+
     health_check:
-      http_path: /list-apps
+      # Not `/` - that 307-redirects to /dev-ui/ and health checkers handle it inconsistently.
+      http_path: /health
       initial_delay_seconds: 30
-      period_seconds: 20
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
       failure_threshold: 5
+
     envs:
-      # The agent reads Snowflake in the deployed app; DuckDB is for local work only.
       - key: ATL_STORE
-        scope: RUN_TIME
         value: snowflake
-      # Development burns the free-tier daily quota on flash-lite, so the deployed
-      # app runs on a model whose 20-request allowance is untouched.
+        scope: RUN_TIME
+        type: GENERAL
+      # Development burns the free-tier daily quota on flash-lite, so the deployed app runs
+      # on a model whose 20-request allowance is untouched.
       - key: GEMINI_MODEL
-        scope: RUN_TIME
         value: gemini-3.6-flash
+        scope: RUN_TIME
+        type: GENERAL
       - key: GOOGLE_GENAI_USE_VERTEXAI
-        scope: RUN_TIME
         value: "FALSE"
+        scope: RUN_TIME
+        type: GENERAL
       - key: SF_WAREHOUSE
-        scope: RUN_TIME
         value: COMPUTE_WH
+        scope: RUN_TIME
+        type: GENERAL
       - key: SF_DATABASE
-        scope: RUN_TIME
         value: ATL
+        scope: RUN_TIME
+        type: GENERAL
       - key: SF_SCHEMA
-        scope: RUN_TIME
         value: PUBLIC
+        scope: RUN_TIME
+        type: GENERAL
       - key: SF_ROLE
-        scope: RUN_TIME
         value: ACCOUNTADMIN
+        scope: RUN_TIME
+        type: GENERAL
       - key: SF_CORTEX_MODEL
-        scope: RUN_TIME
         value: claude-sonnet-4-5
-      # Set with: doctl apps update <id> --spec .do/app.yaml after filling these in,
-      # or in the dashboard. Never commit real values.
+        scope: RUN_TIME
+        type: GENERAL
       - key: GOOGLE_API_KEY
+        value: ${GOOGLE_API_KEY}
         scope: RUN_TIME
         type: SECRET
-        value: REPLACE_ME
       - key: SF_ACCOUNT
+        value: ${SF_ACCOUNT}
         scope: RUN_TIME
         type: SECRET
-        value: REPLACE_ME
       - key: SF_USER
+        value: ${SF_USER}
         scope: RUN_TIME
         type: SECRET
-        value: REPLACE_ME
       - key: SF_PAT
+        value: ${SF_PAT}
         scope: RUN_TIME
         type: SECRET
-        value: REPLACE_ME

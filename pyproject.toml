@@ -64,6 +64,9 @@ addopts = "-q"
 testpaths = ["tests"]
 filterwarnings = [
     "error",
-    # Raised inside google-adk 2.6.3 itself; nothing in this repo subclasses BaseAgentConfig.
+    # All raised inside google-adk 2.6.3 itself, not by anything in this repo. Without these
+    # the eval tests fail on ADK's own warnings rather than on agent behaviour.
     "ignore:BaseAgentConfig is deprecated:DeprecationWarning",
+    "ignore:.*EXPERIMENTAL.*:UserWarning",
+    "ignore:.*vertexai.preview.rag.*:UserWarning",
 ]

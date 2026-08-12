@@ -1,5 +1,9 @@
 # Serves the ADK agent, and also runs the harvest when started with a different command.
 # One image, two entrypoints, so the web app and the scheduled harvest can never drift apart.
+#
+# Deliberately plain Docker syntax: no `RUN --mount` cache or bind mounts. Those require
+# BuildKit, which DigitalOcean App Platform's builder does not enable, and the build fails
+# there while succeeding locally where Docker Desktop turns BuildKit on by default.
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
 
 ENV UV_COMPILE_BYTECODE=1 \
@@ -9,15 +13,12 @@ ENV UV_COMPILE_BYTECODE=1 \
 WORKDIR /app
 
 # Dependencies resolve from the lockfile alone, so this layer survives source edits.
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --locked --no-dev --no-install-project
+COPY pyproject.toml uv.lock ./
+RUN uv sync --locked --no-dev --no-install-project
 
-COPY pyproject.toml uv.lock README.md ./
+COPY README.md ./
 COPY src/ ./src/
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-dev
+RUN uv sync --locked --no-dev
 
 
 FROM python:3.13-slim-bookworm AS runtime
@@ -33,6 +34,11 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PORT=8080
 
 USER app
+
+# Bake the DuckDB spatial extension in. Otherwise every cold start downloads it, adding ~35s
+# and making each scheduled harvest depend on DuckDB's extension CDN staying up.
+RUN python -c "import duckdb; duckdb.connect().execute('INSTALL spatial; LOAD spatial;')"
+
 EXPOSE 8080
 
 # DigitalOcean and Render both inject PORT; bind 0.0.0.0 or the platform sees no listener.
