@@ -167,9 +167,22 @@ The image builds with plain Docker syntax on purpose. `RUN --mount` cache and bi
 require BuildKit, which App Platform's builder does not enable, so a BuildKit-dependent
 Dockerfile succeeds locally and fails there.
 
-The Render Workflow is defined in [`src/atl_transit/workflow.py`](src/atl_transit/workflow.py).
-Render Blueprints do not yet support Workflows, so the service is created in the dashboard
-against that module; the task definitions, retry policy and fan-out live in code.
+The Render Workflow is defined in [`src/atl_transit/workflow.py`](src/atl_transit/workflow.py)
+and deployed as `atl-transit-harvest`. Blueprints do not yet support Workflows, so the service
+is created via the CLI rather than `render.yaml`; the task definitions, retry policy and
+fan-out all live in code:
+
+```bash
+render workflows create --name atl-transit-harvest --runtime python \
+  --repo https://github.com/devfep/hack-renderatl-2026 --branch main \
+  --build-command "pip install uv==0.12.3 && uv sync --frozen --no-dev" \
+  --run-command "uv run python -m atl_transit.workflow"
+
+render workflows start atl-transit-harvest/harvest --input='["cron"]'
+```
+
+`render.yaml` declares the cron that starts it — Workflows has no native scheduling, so a
+scheduled job triggering a run is Render's own documented pattern.
 
 ## Layout
 
