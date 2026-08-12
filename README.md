@@ -163,9 +163,11 @@ checking its own word count until it exhausted the token budget and never answer
 the word limit fixed it; the brief extractor still has to find the answer among the
 commentary.
 
-**A long agent stream needs a short path.** Answering takes ~30s across five network hops, and
-CopilotKit's hosted Intelligence gateway terminated the stream before it finished. Running the
-agent in-process removed the hop.
+**A stream failure looked like a timeout and was an auth problem.** Answering takes ~30s
+across five network hops, and the UI reported `RUN_ERROR: terminated`. The obvious read was
+that something upstream cut a long stream; the actual cause was an incomplete CopilotKit
+license selection. Worth recording because the plausible diagnosis and the correct one pointed
+at different components.
 
 ## Running it
 
