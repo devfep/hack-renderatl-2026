@@ -12,6 +12,7 @@
 import { useAgent } from "@copilotkit/react-core/v2";
 
 import { Briefing } from "@/components/briefing";
+import { Sources } from "@/components/sources";
 
 const INK = "#ffffff";
 const INK_SECONDARY = "#c3c2b7";
@@ -28,6 +29,7 @@ interface Result {
   columns?: string[];
   rows?: Row[];
   row_count?: number;
+  sources?: string[];
 }
 
 /** Pull the most recent ask_transit payload out of the conversation, if there is one. */
@@ -98,6 +100,13 @@ export function ResultPanel({ agentId }: { agentId: string }) {
         </details>
       ) : null}
 
+      {result.sources?.length ? (
+        <p className="mt-6 text-xs" style={{ color: INK_MUTED }}>
+          <span className="font-semibold uppercase tracking-wider">Sources</span>{" "}
+          {result.sources.join(" · ")}
+        </p>
+      ) : null}
+
       {typeof result.row_count === "number" ? (
         <p className="mt-4 text-xs" style={{ color: INK_MUTED }}>
           {result.row_count} row{result.row_count === 1 ? "" : "s"} returned
@@ -106,6 +115,8 @@ export function ResultPanel({ agentId }: { agentId: string }) {
             : ""}
         </p>
       ) : null}
+
+      <Sources />
     </div>
   );
 }

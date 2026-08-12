@@ -8,6 +8,8 @@
  * needs no legend, so every bar is directly labelled instead.
  */
 
+import { Sources } from "@/components/sources";
+
 const INK = "#ffffff";
 const INK_SECONDARY = "#c3c2b7";
 const INK_MUTED = "#898781";
@@ -111,6 +113,8 @@ export function Briefing() {
           directly, and every figure it gives you comes back from that query.
         </p>
       </section>
+
+      <Sources />
     </div>
   );
 }

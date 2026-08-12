@@ -20,6 +20,30 @@ from atl_transit.store import open_store
 
 MAX_ROWS = 50
 
+# Returned with every answer so a citation is something the agent is handed, not something it
+# has to remember. Each names a table's real provenance.
+SOURCES = {
+    "STOPS": "MARTA GTFS schedule; City of Atlanta NPU and Communities of Concern 2025",
+    "STOP_FREQUENCY": "MARTA GTFS schedule (stop_times aggregated per stop per day)",
+    "ROUTES": "MARTA GTFS schedule",
+    "COC_AREA": "City of Atlanta Communities of Concern 2025; MARTA GTFS schedule",
+}
+
+
+def sources_for(sql: str) -> list[str]:
+    """Name the datasets a query drew on.
+
+    Args:
+        sql: The statement that produced the rows.
+
+    Returns:
+        One provenance string per table the query touched, de-duplicated.
+    """
+    upper = sql.upper()
+    cited = [source for table, source in SOURCES.items() if table in upper]
+    return list(dict.fromkeys(cited))
+
+
 INSTRUCTION = """\
 You answer questions about Atlanta's MARTA transit network and how its service relates to the
 neighbourhoods the City of Atlanta has formally designated Communities of Concern.
@@ -40,6 +64,8 @@ When you present an answer:
   there. MARTA's median weekday service is roughly equal inside and outside Communities of
   Concern, and saying so honestly is a correct answer.
 - Offer one natural follow-up question the data could also answer.
+- End with a Sources line naming every entry in the tool result's `sources`. Cite only what
+  that list contains - it is the provenance of the rows you were actually given.
 
 Use `run_sql` only if `ask_transit` reports that Cortex is unavailable.
 Use `live_vehicles` when asked what is happening right now."""
@@ -103,6 +129,7 @@ def ask_transit(question: str) -> dict[str, Any]:
         "columns": columns,
         "rows": [[jsonable(v) for v in r] for r in capped],
         "row_count": len(rows),
+        "sources": sources_for(sql),
     }
 
 
@@ -123,6 +150,7 @@ def run_sql(sql: str) -> dict[str, Any]:
         "columns": columns,
         "rows": [[jsonable(v) for v in r] for r in rows[:MAX_ROWS]],
         "row_count": len(rows),
+        "sources": sources_for(sql),
     }
 
 
@@ -159,6 +187,7 @@ def live_vehicles() -> dict[str, Any]:
             "route_name comes from the schedule. Never name a route that has no route_name "
             "here - say the route number instead."
         ),
+        "sources": ["MARTA GTFS-realtime vehicle positions (live)", SOURCES["ROUTES"]],
     }
 
 
