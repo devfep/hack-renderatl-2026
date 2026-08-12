@@ -8,6 +8,8 @@ Cortex REST call against harvested data.
 from __future__ import annotations
 
 import os
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any
 
 from google.adk.agents import Agent
@@ -35,6 +37,26 @@ When you present an answer:
 
 Use `run_sql` only if `ask_transit` reports that Cortex is unavailable.
 Use `live_vehicles` when asked what is happening right now."""
+
+
+def jsonable(value: Any) -> Any:  # noqa: ANN401 - accepts whatever a driver returns
+    """Convert a database value into something the ADK event stream can serialise.
+
+    Snowflake returns ``Decimal`` for numeric columns and ``date``/``datetime`` for temporal
+    ones, none of which are JSON-serialisable. DuckDB returns plain floats, so this only bites
+    against the deployed Store.
+
+    Args:
+        value: A single cell from a query result.
+
+    Returns:
+        The value as a JSON-safe primitive.
+    """
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, datetime | date):
+        return value.isoformat()
+    return value
 
 
 def _render(columns: list[str], rows: list[tuple[Any, ...]]) -> str:
@@ -73,7 +95,7 @@ def ask_transit(question: str) -> dict[str, Any]:
         "summary": summary,
         "sql": sql,
         "columns": columns,
-        "rows": [list(r) for r in capped],
+        "rows": [[jsonable(v) for v in r] for r in capped],
         "row_count": len(rows),
     }
 
@@ -93,7 +115,7 @@ def run_sql(sql: str) -> dict[str, Any]:
         return {"error": str(exc), "schema": SCHEMA}
     return {
         "columns": columns,
-        "rows": [list(r) for r in rows[:MAX_ROWS]],
+        "rows": [[jsonable(v) for v in r] for r in rows[:MAX_ROWS]],
         "row_count": len(rows),
     }
 

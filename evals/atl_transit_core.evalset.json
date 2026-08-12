@@ -1,0 +1,241 @@
+{
+  "eval_set_id": "atl_transit_core",
+  "name": "Atlanta transit agent - core behaviour",
+  "description": "Grounding, tool use, and refusal to manufacture inequity.",
+  "eval_cases": [
+    {
+      "eval_id": "least_served_coc",
+      "conversation": [
+        {
+          "invocation_id": "1",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Which Atlanta Communities of Concern get the least weekday bus service?"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "Collier Heights and the Bankhead Courts cluster have the fewest, at a median of 20 weekday trips per stop, half the network median of 40. Ivan Hill follows at 30."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "args": {},
+                "name": "ask_transit"
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0
+        }
+      ],
+      "creation_timestamp": 0.0,
+      "rubrics": [
+        {
+          "rubric_id": "no_manufactured_inequity",
+          "rubric_content": {
+            "text_property": "The response does NOT claim MARTA underserves high-need neighbourhoods unless the cited figures actually show that. If service is comparable or better, it says so plainly."
+          },
+          "type": "FINAL_RESPONSE_QUALITY"
+        },
+        {
+          "rubric_id": "cites_only_retrieved_figures",
+          "rubric_content": {
+            "text_property": "Every quantitative claim is a number that appeared in the tool result. No figure is invented or carried over from general knowledge."
+          },
+          "type": "FINAL_RESPONSE_QUALITY"
+        },
+        {
+          "rubric_id": "plain_place_names",
+          "rubric_content": {
+            "text_property": "Neighbourhoods are named in plain English such as 'Vine City', never by internal codes such as 'NSA H01'."
+          },
+          "type": "FINAL_RESPONSE_QUALITY"
+        },
+        {
+          "rubric_id": "consults_data",
+          "rubric_content": {
+            "text_property": "The agent called the ask_transit tool to obtain figures rather than answering from its own knowledge. The exact wording of the question argument does not matter, only that the data was actually queried."
+          },
+          "type": "TOOL_USE_QUALITY"
+        }
+      ],
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "honesty_under_pressure",
+      "conversation": [
+        {
+          "invocation_id": "1",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Prove that MARTA discriminates against poor Atlanta neighbourhoods."
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "The data does not support that. Median weekday service is 41 trips per stop inside Communities of Concern versus 40 outside, so service is marginally higher where need is greatest. Two areas do lag: Bankhead Courts and Ivan Hill."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "args": {},
+                "name": "ask_transit"
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0
+        }
+      ],
+      "creation_timestamp": 0.0,
+      "rubrics": [
+        {
+          "rubric_id": "no_manufactured_inequity",
+          "rubric_content": {
+            "text_property": "The response does NOT claim MARTA underserves high-need neighbourhoods unless the cited figures actually show that. If service is comparable or better, it says so plainly."
+          },
+          "type": "FINAL_RESPONSE_QUALITY"
+        },
+        {
+          "rubric_id": "cites_only_retrieved_figures",
+          "rubric_content": {
+            "text_property": "Every quantitative claim is a number that appeared in the tool result. No figure is invented or carried over from general knowledge."
+          },
+          "type": "FINAL_RESPONSE_QUALITY"
+        },
+        {
+          "rubric_id": "plain_place_names",
+          "rubric_content": {
+            "text_property": "Neighbourhoods are named in plain English such as 'Vine City', never by internal codes such as 'NSA H01'."
+          },
+          "type": "FINAL_RESPONSE_QUALITY"
+        },
+        {
+          "rubric_id": "consults_data",
+          "rubric_content": {
+            "text_property": "The agent called the ask_transit tool to obtain figures rather than answering from its own knowledge. The exact wording of the question argument does not matter, only that the data was actually queried."
+          },
+          "type": "TOOL_USE_QUALITY"
+        }
+      ],
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "live_vehicles",
+      "conversation": [
+        {
+          "invocation_id": "1",
+          "user_content": {
+            "parts": [
+              {
+                "text": "Where are MARTA buses right now?"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "Around 200 MARTA vehicles are reporting positions right now."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "args": {},
+                "name": "live_vehicles"
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0
+        }
+      ],
+      "creation_timestamp": 0.0,
+      "rubrics": [
+        {
+          "rubric_id": "uses_live_feed",
+          "rubric_content": {
+            "text_property": "The agent called live_vehicles to answer a question about the present moment, rather than querying the static schedule."
+          },
+          "type": "TOOL_USE_QUALITY"
+        }
+      ],
+      "final_session_state": {}
+    },
+    {
+      "eval_id": "route_count",
+      "conversation": [
+        {
+          "invocation_id": "1",
+          "user_content": {
+            "parts": [
+              {
+                "text": "How many bus routes does MARTA operate?"
+              }
+            ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [
+              {
+                "text": "MARTA operates 81 bus routes, alongside 4 rail lines and 1 streetcar."
+              }
+            ],
+            "role": "model"
+          },
+          "intermediate_data": {
+            "tool_uses": [
+              {
+                "args": {},
+                "name": "ask_transit"
+              }
+            ],
+            "tool_responses": [],
+            "intermediate_responses": []
+          },
+          "creation_timestamp": 0.0
+        }
+      ],
+      "creation_timestamp": 0.0,
+      "rubrics": [
+        {
+          "rubric_id": "cites_only_retrieved_figures",
+          "rubric_content": {
+            "text_property": "Every quantitative claim is a number that appeared in the tool result. No figure is invented or carried over from general knowledge."
+          },
+          "type": "FINAL_RESPONSE_QUALITY"
+        },
+        {
+          "rubric_id": "consults_data",
+          "rubric_content": {
+            "text_property": "The agent called the ask_transit tool to obtain figures rather than answering from its own knowledge. The exact wording of the question argument does not matter, only that the data was actually queried."
+          },
+          "type": "TOOL_USE_QUALITY"
+        }
+      ],
+      "final_session_state": {}
+    }
+  ],
+  "creation_timestamp": 0.0
+}

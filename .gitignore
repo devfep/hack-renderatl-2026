@@ -8,3 +8,5 @@ data/raw/
 *.zip
 .DS_Store
 .scratch/
+.adk/
+evals/**/eval_history/
