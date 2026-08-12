@@ -1,0 +1,108 @@
+# The CopilotKit frontend, deployed as its own app.
+#
+# Deliberately separate from .do/app.yaml rather than a second component of it: the ADK app is
+# the known-good deployment, and nothing about shipping this UI should be able to take it down.
+#
+#   set -a && . ./.env && . ./atl-ui/.env && set +a
+#   envsubst < .do/ui.yaml | doctl apps create --spec -
+name: atl-transit-ui
+region: atl
+
+alerts:
+  - rule: DEPLOYMENT_FAILED
+
+ingress:
+  rules:
+    - component:
+        name: ui
+      match:
+        path:
+          prefix: /
+
+services:
+  - name: ui
+    git:
+      repo_clone_url: https://github.com/devfep/hack-renderatl-2026.git
+      branch: main
+    source_dir: /
+    dockerfile_path: Dockerfile.ui
+
+    http_port: 8080
+    instance_count: 1
+    # Two runtimes plus a Next build; 1GB is the floor that does not OOM.
+    instance_size_slug: apps-s-1vcpu-2gb
+
+    health_check:
+      http_path: /api/copilotkit/info
+      initial_delay_seconds: 60
+      period_seconds: 15
+      timeout_seconds: 10
+      failure_threshold: 6
+
+    envs:
+      - key: ATL_STORE
+        value: snowflake
+        scope: RUN_TIME
+        type: GENERAL
+      - key: AGENT_URL
+        value: http://127.0.0.1:8000/
+        scope: RUN_TIME
+        type: GENERAL
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash
+        scope: RUN_TIME
+        type: GENERAL
+      - key: GOOGLE_GENAI_USE_VERTEXAI
+        value: "FALSE"
+        scope: RUN_TIME
+        type: GENERAL
+      - key: COPILOTKIT_TELEMETRY_DISABLED
+        value: "true"
+        scope: RUN_AND_BUILD_TIME
+        type: GENERAL
+      - key: SF_WAREHOUSE
+        value: COMPUTE_WH
+        scope: RUN_TIME
+        type: GENERAL
+      - key: SF_DATABASE
+        value: ATL
+        scope: RUN_TIME
+        type: GENERAL
+      - key: SF_SCHEMA
+        value: PUBLIC
+        scope: RUN_TIME
+        type: GENERAL
+      - key: SF_ROLE
+        value: ACCOUNTADMIN
+        scope: RUN_TIME
+        type: GENERAL
+      - key: SF_CORTEX_MODEL
+        value: claude-sonnet-4-5
+        scope: RUN_TIME
+        type: GENERAL
+      # Needed at BUILD time as well: next.config.ts bakes the threads UI flag from it, so a
+      # runtime-only token leaves the UI gate and the runtime disagreeing.
+      - key: COPILOTKIT_LICENSE_TOKEN
+        value: ${COPILOTKIT_LICENSE_TOKEN}
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+      - key: GOOGLE_API_KEY
+        value: ${GOOGLE_API_KEY}
+        scope: RUN_TIME
+        type: SECRET
+      - key: SF_ACCOUNT
+        value: ${SF_ACCOUNT}
+        scope: RUN_TIME
+        type: SECRET
+      - key: SF_USER
+        value: ${SF_USER}
+        scope: RUN_TIME
+        type: SECRET
+      - key: SF_PAT
+        value: ${SF_PAT}
+        scope: RUN_TIME
+        type: SECRET
+      - key: INTELLIGENCE_API_KEY
+        value: ${INTELLIGENCE_API_KEY}
+        scope: RUN_TIME
+        type: SECRET

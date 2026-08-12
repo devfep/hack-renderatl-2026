@@ -1,0 +1,59 @@
+# The CopilotKit frontend and the AG-UI agent it talks to, in one image.
+#
+# Built from the REPO ROOT, not from atl-ui/: the agent depends on this repository's
+# atl_transit package by path (`../..`), so both have to be in the build context and at the
+# same relative positions they occupy in the repo.
+#
+# Plain Docker syntax throughout - no BuildKit cache mounts, which App Platform cannot build.
+FROM node:22-bookworm-slim AS base
+
+# uv brings its own Python, so the image needs no system python.
+COPY --from=ghcr.io/astral-sh/uv:0.12.3 /uv /usr/local/bin/uv
+
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_INSTALL_DIR=/opt/python \
+    PYTHONUNBUFFERED=1 \
+    NEXT_TELEMETRY_DISABLED=1 \
+    COPILOTKIT_TELEMETRY_DISABLED=true
+
+WORKDIR /app
+
+# The parent package first: the agent's lockfile resolves it from here.
+COPY pyproject.toml uv.lock README.md ./
+COPY src/ ./src/
+
+# Agent dependencies resolve from its own lockfile.
+COPY atl-ui/agent/pyproject.toml atl-ui/agent/uv.lock atl-ui/agent/.python-version ./atl-ui/agent/
+RUN uv python install 3.13 && cd atl-ui/agent && uv sync --locked --no-dev
+
+# Frontend dependencies. postinstall would re-run the agent setup script, which we have
+# already done above with the lockfile, so it is skipped.
+COPY atl-ui/package.json atl-ui/package-lock.json ./atl-ui/
+RUN cd atl-ui && npm ci --ignore-scripts
+
+COPY atl-ui/ ./atl-ui/
+
+# NEXT_PUBLIC_COPILOTKIT_THREADS_ENABLED is baked at build time from this token, so the UI
+# gate and the runtime only agree if it is present here as well as at run time.
+ARG COPILOTKIT_LICENSE_TOKEN=""
+ENV COPILOTKIT_LICENSE_TOKEN=${COPILOTKIT_LICENSE_TOKEN}
+RUN cd atl-ui && npm run build
+
+ENV PORT=8080 \
+    AGENT_URL=http://127.0.0.1:8000/ \
+    ATL_STORE=snowflake
+
+EXPOSE 8080
+
+# Agent on a fixed internal port, Next on the platform's PORT. If either dies the container
+# exits, so the platform restarts the pair rather than serving a UI with no agent behind it.
+# bash, not sh: this image's /bin/sh is dash, which has no `wait -n`.
+CMD ["bash", "-c", "\
+  (cd /app/atl-ui/agent && PORT=8000 uv run --no-sync python main.py 2>&1 | sed 's/^/[agent] /') & \
+  AGENT=$!; \
+  (cd /app/atl-ui && npx next start --port ${PORT} --hostname 0.0.0.0 2>&1 | sed 's/^/[ui] /') & \
+  UI=$!; \
+  wait -n $AGENT $UI; \
+  kill $AGENT $UI 2>/dev/null; \
+  exit 1"]

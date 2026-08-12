@@ -1,9 +1,17 @@
-data/
-.venv/
-.git/
-__pycache__/
+# Host build artefacts must never enter the image: a copied .venv carries symlinks to the
+# host's Python and silently replaces the one built inside, which then fails at runtime.
+**/.venv/
+**/node_modules/
+**/.next/
+**/__pycache__/
 *.pyc
-.env
+**/.env
+**/.git/
+data/
+**/data/
+*.duckdb
+*.zip
 .pytest_cache/
 .ruff_cache/
 tests/
+.DS_Store
