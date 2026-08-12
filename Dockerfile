@@ -1,51 +1,39 @@
-# One image, two roles: the ADK web server (DigitalOcean) and the harvest (Render cron).
-#
-# Deliberately free of BuildKit syntax. DigitalOcean App Platform's builder does not enable
-# BuildKit, so `RUN --mount=type=cache` and `RUN --mount=type=bind` fail there. Dependency
-# caching comes from ordinary layer ordering instead: lockfile first, source second.
-
-FROM python:3.13-slim-trixie AS builder
-
-COPY --from=ghcr.io/astral-sh/uv:0.12.3 /uv /uvx /bin/
+# Serves the ADK agent, and also runs the harvest when started with a different command.
+# One image, two entrypoints, so the web app and the scheduled harvest can never drift apart.
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
 
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
-    UV_PYTHON_DOWNLOADS=0 \
-    UV_PROJECT_ENVIRONMENT=/app/.venv
+    UV_PYTHON_DOWNLOADS=never
 
 WORKDIR /app
 
-# Dependencies resolve into their own layer, reused whenever only src/ changes.
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
+# Dependencies resolve from the lockfile alone, so this layer survives source edits.
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --locked --no-dev --no-install-project
 
-COPY README.md ./
-COPY src ./src
-RUN uv sync --frozen --no-dev --no-editable
+COPY pyproject.toml uv.lock README.md ./
+COPY src/ ./src/
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-dev
 
 
-FROM python:3.13-slim-trixie
+FROM python:3.13-slim-bookworm AS runtime
+
+RUN useradd --create-home --uid 10001 app
+WORKDIR /app
+
+COPY --from=builder --chown=app:app /app /app
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
-    HOME=/home/atl
+    ATL_STORE=snowflake \
+    PORT=8080
 
-WORKDIR /app
-RUN useradd --create-home --uid 10001 atl
-
-COPY --from=builder --chown=atl:atl /app/.venv /app/.venv
-COPY --chown=atl:atl src ./src
-
-# harvest writes its GTFS downloads here, and DuckDBStore its database file.
-RUN mkdir -p /app/data/raw && chown -R atl:atl /app/data
-
-USER atl
-
-# Bake the DuckDB spatial extension into the image so neither role has to download it on a
-# cold start. Both harvest and DuckDBStore run `INSTALL spatial; LOAD spatial;`.
-RUN python -c "import duckdb; duckdb.connect().execute('INSTALL spatial; LOAD spatial;')"
-
+USER app
 EXPOSE 8080
 
-# DigitalOcean injects PORT. Render's cron job overrides this entirely via dockerCommand.
-CMD ["sh", "-c", "exec adk web /app/src --host 0.0.0.0 --port ${PORT:-8080}"]
+# DigitalOcean and Render both inject PORT; bind 0.0.0.0 or the platform sees no listener.
+CMD ["sh", "-c", "adk web src --host 0.0.0.0 --port ${PORT}"]

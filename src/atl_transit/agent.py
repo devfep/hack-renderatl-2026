@@ -113,8 +113,9 @@ def live_vehicles() -> dict[str, Any]:
 
 root_agent = Agent(
     name="atl_transit",
-    # gemini-2.5-* is retired for new API keys; 3.5-flash is the current equivalent.
-    model=os.environ.get("GEMINI_MODEL", "gemini-3.5-flash"),
+    # gemini-2.5-* is retired for new keys. The free tier allows only 20 requests per day
+    # PER MODEL, so development and the demo deliberately run on different models.
+    model=os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite"),
     description="Answers questions about MARTA service and Atlanta transit equity.",
     instruction=INSTRUCTION,
     tools=[ask_transit, run_sql, live_vehicles],
