@@ -138,6 +138,35 @@ invocation [atl_transit]      CHAIN
     call_llm                  LLM      ← Gemini presents the result
 ```
 
+## What we ran into
+
+Recorded because each one cost real time and none is obvious from the code.
+
+**Gemini's free tier is 20 requests per day, per model** — a hard daily cap, not a rate limit.
+We burned one model's entire allowance on testing and had to run development and the demo on
+different models until billing was enabled.
+
+**Model capacity is not guaranteed.** Mid-build, `gemini-3.5-flash-lite` began returning
+`503: This model is currently experiencing high demand` for every request. Nothing had changed
+on our side. `GEMINI_MODEL` is env-overridable precisely so this is a one-line recovery rather
+than a redeploy.
+
+**The Dockerfile worked locally and would have failed on DigitalOcean.** `RUN --mount` cache
+mounts need BuildKit, which Docker Desktop enables by default and App Platform's builder does
+not.
+
+**Snowflake returns `Decimal`, which ADK cannot serialise.** Found by the eval harness, not by
+testing — it passed locally on DuckDB and would only have failed in production.
+
+**Gemma 4 reasons out loud.** Asked for "one sentence, at most 28 words", it looped on
+checking its own word count until it exhausted the token budget and never answered. Removing
+the word limit fixed it; the brief extractor still has to find the answer among the
+commentary.
+
+**A long agent stream needs a short path.** Answering takes ~30s across five network hops, and
+CopilotKit's hosted Intelligence gateway terminated the stream before it finished. Running the
+agent in-process removed the hop.
+
 ## Running it
 
 ```bash
