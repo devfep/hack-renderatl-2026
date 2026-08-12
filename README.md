@@ -5,7 +5,9 @@ including when the answer is "this is fine."
 
 Built for [Hack RenderATL 2026](https://hack-renderatl.devpost.com/).
 
-**Live: https://atl-transit-wra5i.ondigitalocean.app/dev-ui/**
+**Live:**
+- **App — https://atl-transit-ui-duzrs.ondigitalocean.app** (CopilotKit + A2UI, agent-driven panel)
+- Agent API — https://atl-transit-wra5i.ondigitalocean.app/dev-ui/ (ADK's own interface, same agent)
 
 ```
 "Which Atlanta Communities of Concern get the least weekday bus service?"
@@ -16,7 +18,7 @@ Built for [Hack RenderATL 2026](https://hack-renderatl.devpost.com/).
 
 ## The finding
 
-We set out to prove MARTA underserves Atlanta's poorest neighbourhoods. **The data refused.**
+I set out to prove MARTA underserves Atlanta's poorest neighbourhoods. **The data refused.**
 
 Using the City of Atlanta's own [Communities of Concern](https://services2.arcgis.com/zLeajbicrDRLQcny/arcgis/rest/services/Communities_of_Concern_2025/FeatureServer/4)
 — the city's official designation of where need is greatest — and joining it to MARTA's
@@ -44,7 +46,7 @@ households have no car receive a quarter of Campbellton Road's service.
 
 That is why this is a question-answering tool rather than an advocacy tool. The honest answer
 is more useful than the expected one, and residents, NPU councils and advocates can now ask
-their own questions instead of taking ours on faith.
+their own questions instead of taking mine on faith.
 
 ## Architecture
 
@@ -76,7 +78,7 @@ Render Workflow (scheduled)          DigitalOcean App Platform
 
 Every source is public, verified live, and needs no API key.
 
-| Source | Records | What it gives us |
+| Source | Records | What it provides |
 |---|---:|---|
 | [MARTA GTFS](https://itsmarta.com/google_transit_feed/google_transit.zip) | 2,415,218 stop times | Scheduled service at every stop |
 | [Communities of Concern 2025](https://services2.arcgis.com/zLeajbicrDRLQcny/arcgis/rest/services/Communities_of_Concern_2025/FeatureServer/4) | 15 areas | The city's own definition of need |
@@ -84,7 +86,7 @@ Every source is public, verified live, and needs no API key.
 | [MARTA GTFS-realtime](https://gtfs-rt.itsmarta.com/TMGTFSRealTimeWebService/vehicle/vehiclepositions.pb) | ~200 live | Where vehicles are right now |
 
 The harvest aggregates 2.4M stop times into 49,031 per-stop-per-day frequency rows, so the
-agent never queries the raw feed. Atlanta publishes no machine-readable 311 data — we checked
+agent never queries the raw feed. Atlanta publishes no machine-readable 311 data — I checked
 ArcGIS Online, data.gov and Open311, and `data.atlantaga.gov` does not resolve.
 
 ## Evaluation
@@ -138,17 +140,17 @@ invocation [atl_transit]      CHAIN
     call_llm                  LLM      ← Gemini presents the result
 ```
 
-## What we ran into
+## What I ran into
 
 Recorded because each one cost real time and none is obvious from the code.
 
 **Gemini's free tier is 20 requests per day, per model** — a hard daily cap, not a rate limit.
-We burned one model's entire allowance on testing and had to run development and the demo on
+I burned one model's entire allowance on testing and had to run development and the demo on
 different models until billing was enabled.
 
 **Model capacity is not guaranteed.** Mid-build, `gemini-3.5-flash-lite` began returning
 `503: This model is currently experiencing high demand` for every request. Nothing had changed
-on our side. `GEMINI_MODEL` is env-overridable precisely so this is a one-line recovery rather
+on my side. `GEMINI_MODEL` is env-overridable precisely so this is a one-line recovery rather
 than a redeploy.
 
 **The Dockerfile worked locally and would have failed on DigitalOcean.** `RUN --mount` cache
