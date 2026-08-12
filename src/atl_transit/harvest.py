@@ -87,11 +87,13 @@ def _connect(workdir: Path) -> duckdb.DuckDBPyConnection:
     return con
 
 
-def build_tables(workdir: Path) -> dict[str, Any]:
+def build_tables(workdir: Path, *, enrich: bool = True) -> dict[str, Any]:
     """Aggregate the raw feed into the four tables the agent answers from.
 
     Args:
         workdir: Directory populated by :func:`fetch_sources`.
+        enrich: Whether to write Gemma briefs in-line. The Render Workflow sets this
+            False and fans the briefs out as parallel subtasks instead.
 
     Returns:
         Table name to DataFrame, with columns already uppercased for the Store.
@@ -151,7 +153,8 @@ def build_tables(workdir: Path) -> dict[str, Any]:
     }
     for frame in frames.values():
         frame.columns = [c.upper() for c in frame.columns]
-    frames["COC_AREA"] = write_briefs(frames["COC_AREA"])
+    if enrich:
+        frames["COC_AREA"] = write_briefs(frames["COC_AREA"])
     return frames
 
 

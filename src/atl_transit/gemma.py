@@ -78,6 +78,23 @@ def _is_brief(candidate: str) -> bool:
     return not candidate.lower().startswith(COMMENTARY)
 
 
+def brief_for(row: dict[str, Any], timeout: int = 60) -> str:
+    """Write one neighbourhood brief. The unit the Render Workflow fans out.
+
+    Args:
+        row: Keys ``neighborhoods``, ``pct_no_vehicle``, ``pct_poverty``,
+            ``median_trips``.
+        timeout: Request timeout in seconds.
+
+    Returns:
+        One plain sentence, or '' if Gemma never produced one.
+    """
+    api_key = os.environ.get("GOOGLE_API_KEY", "")
+    if not api_key:
+        return ""
+    return _one_brief(row, api_key, timeout)
+
+
 def _one_brief(row: dict[str, Any], api_key: str, timeout: int) -> str:
     """Ask Gemma for a single neighbourhood brief, returning '' if it declines."""
     response = requests.post(
