@@ -68,10 +68,16 @@ services:
         type: GENERAL
       # Traces go to the deployed Phoenix. register() costs about 7s once at startup;
       # individual spans emit in well under a second.
-      - key: PHOENIX_ENDPOINT
-        value: https://atl-transit-phoenix-mi8iu.ondigitalocean.app/v1/traces
-        scope: RUN_TIME
-        type: GENERAL
+      #
+      # Left unset: Phoenix was torn down on 15 Aug 2026. App Platform assigns a new random
+      # hostname suffix on every `apps create`, so the old URL could not be reused anyway.
+      # To re-enable, deploy .do/phoenix.yaml first, then set this to that app's actual
+      # ingress + /v1/traces. Unset, tracing.py falls back to localhost:6006 and the exporter
+      # simply finds nothing listening.
+      # - key: PHOENIX_ENDPOINT
+      #   value: https://<phoenix-app>.ondigitalocean.app/v1/traces
+      #   scope: RUN_TIME
+      #   type: GENERAL
       - key: COPILOTKIT_TELEMETRY_DISABLED
         value: "true"
         scope: RUN_AND_BUILD_TIME

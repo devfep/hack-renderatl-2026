@@ -5,9 +5,11 @@ including when the answer is "this is fine."
 
 Built for [Hack RenderATL 2026](https://hack-renderatl.devpost.com/).
 
-**Live:**
-- **App — https://atl-transit-ui-duzrs.ondigitalocean.app** (CopilotKit + A2UI, agent-driven panel)
-- Agent API — https://atl-transit-wra5i.ondigitalocean.app/dev-ui/ (ADK's own interface, same agent)
+**Not currently deployed.** The hosted demo ran through the judging period and was taken down
+on 15 Aug 2026 to stop the hosting spend. Every deployment spec is committed — `.do/app.yaml`
+(agent API), `.do/ui.yaml` (CopilotKit frontend) and `.do/phoenix.yaml` (traces) each redeploy
+with `doctl`, given the credentials in `.env.example`. It also runs locally against DuckDB with
+no credentials at all; see [Running it](#running-it).
 
 ```
 "Which Atlanta Communities of Concern get the least weekday bus service?"
@@ -247,7 +249,8 @@ render workflows start atl-transit-harvest/harvest --input='["cron"]'
 ```
 
 `render.yaml` declares the cron that starts it — Workflows has no native scheduling, so a
-scheduled job triggering a run is Render's own documented pattern.
+scheduled job triggering a run is Render's own documented pattern. The blueprint was never
+applied, so no harvest is scheduled; the Workflow only runs when started by hand.
 
 **Measured:** in-process the harvest takes **4m 17s**, almost all of it fifteen sequential
 Gemma calls. As a workflow those briefs fan out as independent subtasks and the same run
