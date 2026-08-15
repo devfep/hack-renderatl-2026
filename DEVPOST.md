@@ -1,3 +1,6 @@
+> The hosted demo ran through judging and was taken down afterwards. The repo runs locally
+> against DuckDB with no credentials, and every deployment spec is committed.
+
 ## Inspiration
 
 I wanted to prove that MARTA underserves Atlanta's poorest neighbourhoods. It feels obviously true, and a hackathon is a good excuse to put numbers on it.
